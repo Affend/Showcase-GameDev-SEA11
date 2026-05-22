@@ -22,6 +22,13 @@ public class Movement : MonoBehaviour
     private bool isBowCharging = false;
     private float bowHoldTime = 0f;
 
+    [Header("Attack Damage")]
+    public Transform attackPoint;
+    public float attackRange = 1f;
+    public int attackDamage = 20;
+    public int heavyAttackDamage = 40;
+    public LayerMask enemyLayer;
+
     private void Awake()
     {
         anim = GetComponent<Animator>();
@@ -53,10 +60,7 @@ public class Movement : MonoBehaviour
 
         anim.SetBool("walk", moveInput.magnitude > 0);
 
-        // ======================
         // HOLD + HEAVY ATTACK
-        // Klik kiri
-        // ======================
         if (Input.GetMouseButtonDown(0) && !isBowCharging)
         {
             isChargingAttack = true;
@@ -89,10 +93,7 @@ public class Movement : MonoBehaviour
             attackHoldTime = 0f;
         }
 
-        // ======================
         // BOW ATTACK
-        // Klik kanan
-        // ======================
         if (Input.GetMouseButtonDown(1) && !isChargingAttack)
         {
             isBowCharging = true;
@@ -135,6 +136,9 @@ public class Movement : MonoBehaviour
     {
         anim.ResetTrigger("HeavyAttack");
         anim.SetTrigger("Attack");
+
+        DealDamage(attackDamage);
+
         Debug.Log("Normal Attack!");
     }
 
@@ -142,7 +146,35 @@ public class Movement : MonoBehaviour
     {
         anim.ResetTrigger("Attack");
         anim.SetTrigger("HeavyAttack");
+
+        DealDamage(heavyAttackDamage);
+
         Debug.Log("HEAVY ATTACK!");
+    }
+
+    private void DealDamage(int damage)
+    {
+        if (attackPoint == null)
+        {
+            Debug.LogWarning("AttackPoint belum dipasang di Inspector!");
+            return;
+        }
+
+        Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(
+            attackPoint.position,
+            attackRange,
+            enemyLayer
+        );
+
+        foreach (Collider2D enemy in hitEnemies)
+        {
+            EnemyHealth enemyHealth = enemy.GetComponent<EnemyHealth>();
+
+            if (enemyHealth != null)
+            {
+                enemyHealth.TakeDamage(damage);
+            }
+        }
     }
 
     private void ShootArrow()
@@ -188,5 +220,13 @@ public class Movement : MonoBehaviour
         Vector3 localscale = transform.localScale;
         localscale.x *= -1f;
         transform.localScale = localscale;
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        if (attackPoint == null) return;
+
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(attackPoint.position, attackRange);
     }
 }
