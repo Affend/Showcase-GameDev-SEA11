@@ -18,6 +18,7 @@ public class Movement : MonoBehaviour
     public Transform arrowSpawnPoint;
     public float arrowSpeed = 10f;
     public float maxBowHoldTime = 1.5f;
+    public int arrowDamage = 15;
 
     private bool isBowCharging = false;
     private float bowHoldTime = 0f;
@@ -34,33 +35,25 @@ public class Movement : MonoBehaviour
         anim = GetComponent<Animator>();
 
         if (rb == null)
-        {
             rb = GetComponent<Rigidbody2D>();
-        }
     }
 
-    void Update()
+    private void Update()
     {
         moveInput.x = Input.GetAxisRaw("Horizontal");
         moveInput.y = Input.GetAxisRaw("Vertical");
 
         if (moveInput.magnitude > 1)
-        {
             moveInput.Normalize();
-        }
 
         if (!isFacingRight && moveInput.x > 0f)
-        {
             Flip();
-        }
         else if (isFacingRight && moveInput.x < 0f)
-        {
             Flip();
-        }
 
         anim.SetBool("walk", moveInput.magnitude > 0);
 
-        // HOLD + HEAVY ATTACK
+        // HOLD / HEAVY ATTACK - Klik kiri
         if (Input.GetMouseButtonDown(0) && !isBowCharging)
         {
             isChargingAttack = true;
@@ -82,18 +75,14 @@ public class Movement : MonoBehaviour
             anim.SetBool("IsCharging", false);
 
             if (attackHoldTime >= heavyAttackThreshold)
-            {
                 HeavyAttack();
-            }
             else
-            {
                 NormalAttack();
-            }
 
             attackHoldTime = 0f;
         }
 
-        // BOW ATTACK
+        // BOW ATTACK - Klik kanan
         if (Input.GetMouseButtonDown(1) && !isChargingAttack)
         {
             isBowCharging = true;
@@ -114,7 +103,9 @@ public class Movement : MonoBehaviour
             isBowCharging = false;
             anim.SetBool("IsBowCharging", false);
 
+            anim.ResetTrigger("ShootArrow");
             anim.SetTrigger("ShootArrow");
+
             ShootArrow();
 
             bowHoldTime = 0f;
@@ -138,8 +129,6 @@ public class Movement : MonoBehaviour
         anim.SetTrigger("Attack");
 
         DealDamage(attackDamage);
-
-        Debug.Log("Normal Attack!");
     }
 
     private void HeavyAttack()
@@ -148,11 +137,9 @@ public class Movement : MonoBehaviour
         anim.SetTrigger("HeavyAttack");
 
         DealDamage(heavyAttackDamage);
-
-        Debug.Log("HEAVY ATTACK!");
     }
 
-    private void DealDamage(int damage)
+    public void DealDamage(int damage)
     {
         if (attackPoint == null)
         {
@@ -171,9 +158,7 @@ public class Movement : MonoBehaviour
             EnemyHealth enemyHealth = enemy.GetComponent<EnemyHealth>();
 
             if (enemyHealth != null)
-            {
                 enemyHealth.TakeDamage(damage);
-            }
         }
     }
 
@@ -181,23 +166,28 @@ public class Movement : MonoBehaviour
     {
         if (arrowPrefab == null || arrowSpawnPoint == null)
         {
-            Debug.LogWarning("Arrow Prefab atau Arrow Spawn Point belum dipasang di Inspector!");
+            Debug.LogWarning("Arrow Prefab atau Arrow Spawn Point belum dipasang!");
             return;
         }
 
         GameObject arrow = Instantiate(
             arrowPrefab,
             arrowSpawnPoint.position,
-            arrowSpawnPoint.rotation
+            Quaternion.identity
         );
 
         Rigidbody2D arrowRb = arrow.GetComponent<Rigidbody2D>();
+        Arrow arrowScript = arrow.GetComponent<Arrow>();
 
         if (arrowRb == null)
         {
-            Debug.LogWarning("Arrow prefab belum punya Rigidbody2D!");
+            Debug.LogWarning("Arrow belum punya Rigidbody2D!");
+            Destroy(arrow);
             return;
         }
+
+        if (arrowScript != null)
+            arrowScript.damage = arrowDamage;
 
         float direction = isFacingRight ? 1f : -1f;
 
@@ -210,16 +200,16 @@ public class Movement : MonoBehaviour
         arrowScale.x = Mathf.Abs(arrowScale.x) * direction;
         arrow.transform.localScale = arrowScale;
 
-        Debug.Log("Shoot Arrow!");
+        Destroy(arrow, 3f);
     }
 
     private void Flip()
     {
         isFacingRight = !isFacingRight;
 
-        Vector3 localscale = transform.localScale;
-        localscale.x *= -1f;
-        transform.localScale = localscale;
+        Vector3 localScale = transform.localScale;
+        localScale.x *= -1f;
+        transform.localScale = localScale;
     }
 
     private void OnDrawGizmosSelected()
