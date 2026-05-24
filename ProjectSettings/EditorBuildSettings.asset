@@ -11,6 +11,12 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/SampleScene.unity
     guid: 574671df5ad8b1a4ca4ef411d36dce01
+  - enabled: 1
+    path: Assets/Scenes/Dungeon.unity
+    guid: 61f62494347fa3242ae4f7b33df29d8d
+  - enabled: 1
+    path: Assets/Scenes/HIDUPJOKOWI.unity
+    guid: 977b4d2078a9fe04da1f69b9a7830a1f
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0

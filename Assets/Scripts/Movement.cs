@@ -2,6 +2,9 @@ using UnityEngine;
 
 public class Movement : MonoBehaviour
 {
+    // Static reference to hold our single player instance globally
+    public static Movement Instance { get; private set; }
+
     public Rigidbody2D rb;
     private Vector2 moveInput;
     public float speed = 5f;
@@ -32,6 +35,19 @@ public class Movement : MonoBehaviour
 
     private void Awake()
     {
+        // PERSISTENCE LOGIC START
+        // If an instance already exists and it's not this one, destroy the new duplicate
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        // Establish this object as the persistent instance and protect it across scenes
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
+        // PERSISTENCE LOGIC END
+
         anim = GetComponent<Animator>();
 
         if (rb == null)
@@ -51,7 +67,7 @@ public class Movement : MonoBehaviour
         else if (isFacingRight && moveInput.x < 0f)
             Flip();
 
-        anim.SetBool("walk", moveInput.magnitude > 0);
+        anim.SetBool("Walk", moveInput.magnitude > 0);
 
         // HOLD / HEAVY ATTACK - Klik kiri
         if (Input.GetMouseButtonDown(0) && !isBowCharging)
